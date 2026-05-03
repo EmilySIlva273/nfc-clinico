@@ -34,72 +34,104 @@ export default function Home() {
 
   // 🔥 NFC
   const scanNFC = async () => {
-    if (!('NDEFReader' in window)) {
-      alert("NFC no soportado")
-      return
-    }
+    try {
+      if (!('NDEFReader' in window)) {
+        alert("NFC no soportado")
+        return
+      }
 
-    const ndef = new (window as any).NDEFReader()
-    await ndef.scan()
+      const ndef = new (window as any).NDEFReader()
+      await ndef.scan()
 
-    alert("Acerca el NFC")
+      alert("Acerca el NFC")
 
-    ndef.onreading = async (event: any) => {
-      const decoder = new TextDecoder()
+      ndef.onreading = async (event: any) => {
+        const decoder = new TextDecoder()
 
-      for (const record of event.message.records) {
-        const dni = decoder.decode(record.data).trim().replace("DNI:", "")
+        for (const record of event.message.records) {
 
-        const ahora = new Date()
+          const dni = decoder
+            .decode(record.data)
+            .trim()
+            .replace("DNI:", "")
+            .replace(/\s/g, "")
 
-        // 🟢 ENTRADA
-        if (modo === 'entrada') {
+          const ahora = new Date()
 
-          const { data } = await supabase
-            .from('registros')
-            .select('*')
-            .eq('dni', dni.trim())
+          console.log("DNI LEÍDO:", dni)
 
-          if (data && data.length > 0) {
+          // 🟢 ENTRADA (BUSCAR PACIENTE)
+          if (modo === 'entrada') {
+
+            const { data, error } = await supabase
+              .from('registros')
+              .select('*')
+              .eq('dni', dni)
+
+            if (error) {
+              console.log("ERROR SUPABASE:", error)
+              alert("Error consultando base de datos")
+              return
+            }
+
+            if (data && data.length > 0) {
+
+              setPaciente({
+                ...data[0],
+                fecha_entrada: ahora.toLocaleDateString(),
+                hora_entrada: ahora.toLocaleTimeString()
+              })
+
+              setModo('atencion')
+              alert("Paciente cargado ✔")
+
+            } else {
+              alert("Paciente no registrado")
+            }
+          }
+
+          // 🔴 SALIDA (GUARDAR TODO)
+          else if (modo === 'atencion') {
+
+            const { error } = await supabase
+              .from('registros')
+              .update({
+                ...paciente,
+                ...form,
+                fecha_salida: ahora.toLocaleDateString(),
+                hora_salida: ahora.toLocaleTimeString()
+              })
+              .eq('dni', paciente.dni)
+
+            if (error) {
+              console.log("ERROR AL GUARDAR:", error)
+              alert("Error al guardar registro")
+              return
+            }
+
+            alert("Registro guardado ✔")
+
+            setModo('entrada')
+
             setPaciente({
-              ...data[0],
-              fecha_entrada: ahora.toLocaleDateString(),
-              hora_entrada: ahora.toLocaleTimeString()
+              dni: '',
+              nombres: '',
+              apellidos: '',
+              sexo: '',
+              fecha_nacimiento: '',
+              edad: '',
+              fecha_entrada: '',
+              hora_entrada: '',
+              fecha_salida: '',
+              hora_salida: ''
             })
-
-            setModo('atencion')
-            alert("Paciente cargado")
-          } else {
-            alert("Paciente no registrado")
           }
         }
-
-        // 🔴 SALIDA (GUARDAR)
-        else if (modo === 'atencion') {
-
-          await supabase
-            .from('registros')
-            .update({
-              ...paciente,
-              ...form,
-              fecha_salida: ahora.toLocaleDateString(),
-              hora_salida: ahora.toLocaleTimeString()
-            })
-            .eq('dni', paciente.dni)
-
-          alert("Registro guardado ✔")
-          setModo('entrada')
-
-          setPaciente({
-            dni: '',
-            nombres: '',
-            apellidos: '',
-            sexo: '',
-            fecha_nacimiento: '',
-            edad: ''
-          })
-        }
       }
+
+    } catch (err) {
+      console.log(err)
+      alert("Error NFC o permisos")
     }
   }
 
@@ -119,15 +151,15 @@ export default function Home() {
         {modo === 'entrada' ? 'Escanear Entrada' : 'Escanear Salida / Guardar'}
       </button>
 
-      {/* AUTO COMPLETADO */}
+      {/* PACIENTE */}
       <h3>Paciente</h3>
 
-      <input value={paciente.dni} placeholder="DNI" />
-      <input value={paciente.nombres} placeholder="Nombres" />
-      <input value={paciente.apellidos} placeholder="Apellidos" />
-      <input value={paciente.sexo} placeholder="Sexo" />
-      <input value={paciente.fecha_nacimiento} placeholder="Fecha Nacimiento" />
-      <input value={paciente.edad} placeholder="Edad" />
+      <input value={paciente.dni} placeholder="DNI" readOnly />
+      <input value={paciente.nombres} placeholder="Nombres" readOnly />
+      <input value={paciente.apellidos} placeholder="Apellidos" readOnly />
+      <input value={paciente.sexo} placeholder="Sexo" readOnly />
+      <input value={paciente.fecha_nacimiento} placeholder="Fecha Nacimiento" readOnly />
+      <input value={paciente.edad} placeholder="Edad" readOnly />
 
       <hr />
 
@@ -168,10 +200,10 @@ export default function Home() {
       <br />
 
       <select name="prioridad" onChange={handleChange}>
-        <option>I</option>
-        <option>II</option>
-        <option>III</option>
-        <option>IV</option>
+        <option value="I">I</option>
+        <option value="II">II</option>
+        <option value="III">III</option>
+        <option value="IV">IV</option>
       </select>
 
       <select name="farmacia" onChange={handleChange}>

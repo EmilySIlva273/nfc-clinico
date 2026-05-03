@@ -37,18 +37,24 @@ export default function Home() {
             alert("DNI LEÍDO: " + dni)
 
             // 🔥 BUSCAR EN SUPABASE
+            const dniLimpio = dni.trim()
+
+            console.log("DNI:", dniLimpio)
+
             const { data, error } = await supabase
               .from('registros')
               .select('*')
-              .eq('dni', dni)
-              .single()
+              .eq('dni', dniLimpio)
 
-            if (error || !data) {
+            console.log("DATA:", data)
+            console.log("ERROR:", error)
+
+            if (!data || data.length === 0) {
               alert("Paciente no registrado")
               setPaciente(null)
             } else {
-              setPaciente(data)
               alert("Paciente encontrado")
+              setPaciente(data[0])
             }
           }
         }

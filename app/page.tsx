@@ -14,9 +14,7 @@ export default function Home() {
     fecha_nacimiento: '',
     edad: '',
     fecha_entrada: '',
-    hora_entrada: '',
-    fecha_salida: '',
-    hora_salida: ''
+    hora_entrada: ''
   })
 
   const [form, setForm] = useState<any>({
@@ -32,7 +30,7 @@ export default function Home() {
     farmacia: 'despacho'
   })
 
-  // 🔥 NFC
+  // 📲 NFC
   const scanNFC = async () => {
     try {
       if (!('NDEFReader' in window)) {
@@ -60,7 +58,7 @@ export default function Home() {
 
           console.log("DNI LEÍDO:", dni)
 
-          // 🟢 ENTRADA (BUSCAR PACIENTE)
+          // 🟢 ENTRADA (CARGAR PACIENTE)
           if (modo === 'entrada') {
 
             const { data, error } = await supabase
@@ -69,15 +67,22 @@ export default function Home() {
               .eq('dni', dni)
 
             if (error) {
-              console.log("ERROR SUPABASE:", error)
-              alert("Error consultando base de datos")
+              console.log(error)
+              alert("Error consultando paciente")
               return
             }
 
             if (data && data.length > 0) {
 
+              const p = data[0]
+
               setPaciente({
-                ...data[0],
+                dni: p.dni,
+                nombres: p.nombres,
+                apellidos: p.apellidos,
+                sexo: p.sexo,
+                fecha_nacimiento: p.fecha_nacimiento, // ✔ automático desde Supabase
+                edad: p.edad,
                 fecha_entrada: ahora.toLocaleDateString(),
                 hora_entrada: ahora.toLocaleTimeString()
               })
@@ -90,26 +95,48 @@ export default function Home() {
             }
           }
 
-          // 🔴 SALIDA (GUARDAR TODO)
+          // 🔴 GUARDAR NUEVO REGISTRO (HISTORIAL)
           else if (modo === 'atencion') {
 
             const { error } = await supabase
               .from('registros')
-              .update({
-                ...paciente,
-                ...form,
-                fecha_salida: ahora.toLocaleDateString(),
-                hora_salida: ahora.toLocaleTimeString()
-              })
-              .eq('dni', paciente.dni)
+              .insert([
+                {
+                  dni: paciente.dni,
+                  nombres: paciente.nombres,
+                  apellidos: paciente.apellidos,
+                  sexo: paciente.sexo,
+                  fecha_nacimiento: paciente.fecha_nacimiento,
+                  edad: paciente.edad,
+
+                  fecha_entrada: paciente.fecha_entrada,
+                  hora_entrada: paciente.hora_entrada,
+
+                  fecha_salida: ahora.toLocaleDateString(),
+                  hora_salida: ahora.toLocaleTimeString(),
+
+                  signos_vitales: form.signos_vitales,
+                  pregunta1: form.pregunta1,
+                  pregunta2: form.pregunta2,
+                  pregunta3: form.pregunta3,
+                  pregunta4: form.pregunta4,
+
+                  visip: form.visip,
+                  f_box: form.f_box,
+                  observaciones: form.observaciones,
+
+                  prioridad: form.prioridad,
+                  farmacia: form.farmacia
+                }
+              ])
 
             if (error) {
-              console.log("ERROR AL GUARDAR:", error)
+              console.log("ERROR INSERT:", error)
               alert("Error al guardar registro")
               return
             }
 
-            alert("Registro guardado ✔")
+            alert("Registro guardado ✔ (nuevo historial)")
 
             setModo('entrada')
 
@@ -121,9 +148,7 @@ export default function Home() {
               fecha_nacimiento: '',
               edad: '',
               fecha_entrada: '',
-              hora_entrada: '',
-              fecha_salida: '',
-              hora_salida: ''
+              hora_entrada: ''
             })
           }
         }
@@ -131,7 +156,7 @@ export default function Home() {
 
     } catch (err) {
       console.log(err)
-      alert("Error NFC o permisos")
+      alert("Error NFC")
     }
   }
 
@@ -151,7 +176,7 @@ export default function Home() {
         {modo === 'entrada' ? 'Escanear Entrada' : 'Escanear Salida / Guardar'}
       </button>
 
-      {/* PACIENTE */}
+      {/* PACIENTE (AUTOMÁTICO) */}
       <h3>Paciente</h3>
 
       <input value={paciente.dni} placeholder="DNI" readOnly />

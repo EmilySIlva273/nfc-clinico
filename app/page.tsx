@@ -1,45 +1,74 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 export default function Home() {
-  const [mensaje, setMensaje] = useState("Presiona el botón para activar NFC");
+  const [paciente, setPaciente] = useState<any>(null)
 
-  const leerNFC = async () => {
+  const scanNFC = async () => {
     try {
-      if ("NDEFReader" in window) {
-        const ndef = new (window as any).NDEFReader();
+      const ndef = new NDEFReader()
+      await ndef.scan()
 
-        await ndef.scan();
+      alert("Escanea tu NFC")
 
-        setMensaje("📡 Esperando NFC...");
+      ndef.onreading = async (event) => {
+        const decoder = new TextDecoder()
 
-        ndef.onreading = (event: any) => {
-          const id = event.serialNumber || "SIN_ID";
+        for (const record of event.message.records) {
+          if (record.recordType === "text") {
 
-          setMensaje("✅ NFC detectado: " + id);
+            const dni = decoder.decode(record.data).trim()
 
-          // Redirige al formulario
-          window.location.href = `/registro?id=${id}`;
-        };
-      } else {
-        alert("Tu celular no soporta NFC");
+            console.log("DNI leído:", dni)
+
+            // 🔥 Buscar en Supabase
+            const { data, error } = await supabase
+              .from('registros')
+              .select('*')
+              .eq('dni', dni)
+              .single()
+
+            if (data) {
+              setPaciente(data)
+
+              if (data.estado === "abierto") {
+                alert("Paciente ya tiene registro abierto")
+              } else {
+                alert("Nuevo registro iniciado")
+              }
+
+            } else {
+              alert("Paciente no registrado")
+            }
+          }
+        }
       }
+
     } catch (error) {
-      console.error(error);
-      alert("Error al activar NFC");
+      console.error(error)
+      alert("Error al leer NFC")
     }
-  };
+  }
 
   return (
-    <main style={{ padding: 20 }}>
-      <h1>📲 Lector NFC</h1>
+    <div style={{ padding: 20 }}>
+      <h1>Lector NFC</h1>
 
-      <button onClick={leerNFC} style={{ padding: 10 }}>
+      <button onClick={scanNFC}>
         Activar NFC
       </button>
 
-      <p>{mensaje}</p>
-    </main>
-  );
+      {paciente && (
+        <div>
+          <h2>Datos del paciente</h2>
+          <p>DNI: {paciente.dni}</p>
+          <p>Nombre: {paciente.nombres}</p>
+          <p>Apellido: {paciente.apellidos}</p>
+          <p>Estado: {paciente.estado}</p>
+        </div>
+      )}
+    </div>
+  )
 }

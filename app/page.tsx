@@ -56,7 +56,7 @@ export default function Home() {
         if (modo === 'entrada') {
 
           const { data } = await supabase
-            .from('registros_clinicos')
+            .from('registros')
             .select('*')
             .eq('dni', dni.trim())
 
@@ -78,7 +78,7 @@ export default function Home() {
         else if (modo === 'atencion') {
 
           await supabase
-            .from('registros_clinicos')
+            .from('registros')
             .update({
               ...paciente,
               ...form,

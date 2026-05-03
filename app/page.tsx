@@ -169,72 +169,73 @@ export default function Home() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Sistema Clínico NFC</h1>
+  <div className="min-h-screen bg-gray-100 p-6">
 
-      <button onClick={scanNFC}>
-        {modo === 'entrada' ? 'Escanear Entrada' : 'Escanear Salida / Guardar'}
+    {/* HEADER */}
+    <div className="bg-white shadow p-4 rounded-xl mb-6">
+      <h1 className="text-2xl font-bold text-center">
+        🏥 Sistema Clínico NFC
+      </h1>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      {/* 🧍 PACIENTE */}
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h2 className="text-lg font-semibold mb-3">👤 Paciente</h2>
+
+        <input className="input" value={paciente.dni} placeholder="DNI" readOnly />
+        <input className="input" value={paciente.nombres} placeholder="Nombres" readOnly />
+        <input className="input" value={paciente.apellidos} placeholder="Apellidos" readOnly />
+        <input className="input" value={paciente.sexo} placeholder="Sexo" readOnly />
+        <input className="input" value={paciente.fecha_nacimiento} placeholder="Fecha Nacimiento" readOnly />
+        <input className="input" value={paciente.edad} placeholder="Edad" readOnly />
+      </div>
+
+      {/* 📋 FORMULARIO */}
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h2 className="text-lg font-semibold mb-3">📋 Registro Clínico</h2>
+
+        <div className="space-y-2">
+
+          <label><input type="checkbox" name="signos_vitales" onChange={handleCheck} /> Signos vitales</label>
+          <label><input type="checkbox" name="pregunta1" onChange={handleCheck} /> Pregunta 1</label>
+          <label><input type="checkbox" name="pregunta2" onChange={handleCheck} /> Pregunta 2</label>
+          <label><input type="checkbox" name="pregunta3" onChange={handleCheck} /> Pregunta 3</label>
+          <label><input type="checkbox" name="pregunta4" onChange={handleCheck} /> Pregunta 4</label>
+
+          <input className="input" name="visip" placeholder="Resultado VISIP" onChange={handleChange} />
+          <input className="input" name="f_box" placeholder="F. Box" onChange={handleChange} />
+          <input className="input" name="observaciones" placeholder="Observaciones" onChange={handleChange} />
+
+          <select className="input" name="prioridad" onChange={handleChange}>
+            <option>I</option>
+            <option>II</option>
+            <option>III</option>
+            <option>IV</option>
+          </select>
+
+          <select className="input" name="farmacia" onChange={handleChange}>
+            <option value="despacho">Despacho</option>
+            <option value="prestamo">Préstamo</option>
+          </select>
+
+        </div>
+      </div>
+    </div>
+
+    {/* BOTONES NFC */}
+    <div className="mt-6 flex gap-4 justify-center">
+
+      <button
+        onClick={scanNFC}
+        className="bg-green-600 text-white px-6 py-3 rounded-xl shadow"
+      >
+        Escanear NFC
       </button>
 
-      {/* PACIENTE (AUTOMÁTICO) */}
-      <h3>Paciente</h3>
-
-      <input value={paciente.dni} placeholder="DNI" readOnly />
-      <input value={paciente.nombres} placeholder="Nombres" readOnly />
-      <input value={paciente.apellidos} placeholder="Apellidos" readOnly />
-      <input value={paciente.sexo} placeholder="Sexo" readOnly />
-      <input value={paciente.fecha_nacimiento} placeholder="Fecha Nacimiento" readOnly />
-      <input value={paciente.edad} placeholder="Edad" readOnly />
-
-      <hr />
-
-      {/* FORMULARIO MANUAL */}
-      <h3>Registro Clínico</h3>
-
-      <label>
-        <input type="checkbox" name="signos_vitales" onChange={handleCheck} />
-        Signos vitales
-      </label>
-
-      <label>
-        <input type="checkbox" name="pregunta1" onChange={handleCheck} />
-        Pregunta 1
-      </label>
-
-      <label>
-        <input type="checkbox" name="pregunta2" onChange={handleCheck} />
-        Pregunta 2
-      </label>
-
-      <label>
-        <input type="checkbox" name="pregunta3" onChange={handleCheck} />
-        Pregunta 3
-      </label>
-
-      <label>
-        <input type="checkbox" name="pregunta4" onChange={handleCheck} />
-        Pregunta 4
-      </label>
-
-      <br />
-
-      <input name="visip" placeholder="Resultado VISIP" onChange={handleChange} />
-      <input name="f_box" placeholder="F. Box" onChange={handleChange} />
-      <input name="observaciones" placeholder="Observaciones" onChange={handleChange} />
-
-      <br />
-
-      <select name="prioridad" onChange={handleChange}>
-        <option value="I">I</option>
-        <option value="II">II</option>
-        <option value="III">III</option>
-        <option value="IV">IV</option>
-      </select>
-
-      <select name="farmacia" onChange={handleChange}>
-        <option value="despacho">Despacho</option>
-        <option value="prestamo">Préstamo</option>
-      </select>
     </div>
-  )
+
+  </div>
+)
 }

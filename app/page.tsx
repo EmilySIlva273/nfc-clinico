@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -89,6 +90,13 @@ export default function Home() {
         {loading ? "Escaneando..." : "Escanear NFC"}
       </button>
 
+      {paciente && (
+      <div>
+      <h3>DEBUG SUPABASE</h3>
+      <pre>{JSON.stringify(paciente, null, 2)}</pre>
+      </div>
+      )}
+
       {/* RESULTADO */}
       {paciente && (
         <div style={{ marginTop: 20 }}>
@@ -101,4 +109,15 @@ export default function Home() {
       )}
     </div>
   )
+  const test = async () => {
+    const { data, error } = await supabase
+      .from('registros')
+      .select('*')
+
+    console.log("TEST DATA:", data)
+    console.log("TEST ERROR:", error)
+  }
+  useEffect(() => {
+    test()
+  }, [])
 }

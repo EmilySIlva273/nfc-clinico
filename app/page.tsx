@@ -34,7 +34,7 @@ export default function Home() {
 
             const dni = decoder.decode(record.data).trim()
 
-            console.log("DNI LEÍDO:", dni)
+            alert("DNI LEÍDO: " + dni)
 
             // 🔥 BUSCAR EN SUPABASE
             const { data, error } = await supabase

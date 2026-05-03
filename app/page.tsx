@@ -7,13 +7,16 @@ export default function Home() {
   const [paciente, setPaciente] = useState<any>(null)
 
   const scanNFC = async () => {
+    if (typeof window === "undefined") return
+
     try {
-      const ndef = new NDEFReader()
+      const ndef = new (window as any).NDEFReader()
+
       await ndef.scan()
 
       alert("Escanea tu NFC")
 
-      ndef.onreading = async (event) => {
+      ndef.onreading = async (event: any) => {
         const decoder = new TextDecoder()
 
         for (const record of event.message.records) {
@@ -23,34 +26,21 @@ export default function Home() {
 
             console.log("DNI leído:", dni)
 
-            // 🔥 Buscar en Supabase
             const { data, error } = await supabase
               .from('registros')
               .select('*')
-              .eq('dni', dni)
+              .eq('dni', dni.trim())
               .single()
-
-            if (data) {
-              setPaciente(data)
-
-              if (data.estado === "abierto") {
-                alert("Paciente ya tiene registro abierto")
-              } else {
-                alert("Nuevo registro iniciado")
-              }
-
-            } else {
-              alert("Paciente no registrado")
-            }
           }
         }
       }
 
     } catch (error) {
-      console.error(error)
-      alert("Error al leer NFC")
+      console.error("Error NFC:", error)
+      alert("NFC no disponible")
     }
   }
+}
 
   return (
     <div style={{ padding: 20 }}>
